@@ -37,4 +37,4 @@ jobs:
         context: ./engine/
         file: ./engine/Dockerfile
         platforms: linux/amd64,linux/arm64
-        tags: heurekalabs/${{ github.workflow }}:latest
+        tags: heurekalabs/turbofan-engine:latest
