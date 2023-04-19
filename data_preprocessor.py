@@ -51,7 +51,7 @@ parser.add_argument(
 def download_datasets():
     """ Download and unzip the NASA turbofan dataset. """
     file_name = "data.zip"
-    url = "http://ti.arc.nasa.gov/c/6/"
+    url = "https://data.nasa.gov/api/views/ff5v-kuh6/files/680c0016-00ca-47a5-a4b9-e6c9437f8409?filename=CMAPSSData.zip"
     response = requests.get(url, stream=True)
     with open(file_name, "wb") as handle:
         for data in tqdm(response.iter_content()):
