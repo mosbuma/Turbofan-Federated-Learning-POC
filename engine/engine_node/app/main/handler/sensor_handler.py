@@ -41,7 +41,13 @@ def handle_current_sensors(app, scheduler):
 
     # read the sensor data and cache it
     if sensor_data is None:
+        print("@@@@@@ import sensor data")
         sensor_data = import_data()
+        print(sensor_data)
+    else:
+        print("@@@@@@ have sensor data")
+        print(sensor_data)
+
 
     if get_state() == State.STOPPED:
         # the engine_node is not running so we start it now
@@ -82,10 +88,14 @@ def handle_current_sensors(app, scheduler):
         db.session.commit()
         # retrieve all current sensor data
         sensor_data_all = pd.read_sql(db.session.query(SensorData).statement, db.session.bind)
+        print("@@@@ -> reading sensor data")
+        print(sensor_data_all)
 
     # we need at least an amount of data rows of our window size for inference
     if sensor_data_all.shape[0] >= data_helper.WINDOW_SIZE:
+        print("@@@@ -> before predict rul")
         current_prediction = predict_rul(sensor_data_all)
+        print("@@@@ -> after predict rul")
 
         # switch to maintenance if we predicted the failure is less than 10 cycles ahead
         if current_prediction is not None and current_prediction < MAINTENANCE_LEAD_TIME:
@@ -93,6 +103,9 @@ def handle_current_sensors(app, scheduler):
                 print("+++ Switching to maintenance +++")
                 set_state(State.MAINTENANCE)
                 maintenance_start_cycle = current_cycle
+    else:
+        print("@@@@ -> sensor data shape else case")
+        print("@@@@ ", sensor_data_all.shape[0], data_helper.WINDOW_SIZE)
 
     print('Engine No: {:.0f}\t- Cycle: {:.0f}\t- Predicted RUL: {}'.format(
         current_sensor_values['engine_no'],
@@ -102,6 +115,7 @@ def handle_current_sensors(app, scheduler):
 
     if last_run:
         # all series ended, let´s stop the engine_node
+        print("@@@@ -> set state stopped")
         set_state(State.STOPPED)
         print("-> Engine stopped")
 
@@ -161,6 +175,7 @@ def import_data():
     data = pd.read_csv(data_path)
     data.set_index('time_in_cycles')
 
+    print("@@@@ import data", data);
     return data
 
 
