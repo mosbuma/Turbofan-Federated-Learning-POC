@@ -1,17 +1,17 @@
 import logging
 
 from flask import Flask
+import time
 
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
 from .main import html
-# from .main import db
-# from .main.persistence.utils import set_database_config
-# from .main.handler import sensor_handler
-# from .main.handler.sensor_handler import handle_current_sensors
-# from .main.helper import config_helper
-
+from .main import db
+from .main.persistence.utils import set_database_config
+from .main.handler import sensor_handler
+from .main.handler.sensor_handler import handle_current_sensors
+from .main.helper import config_helper
 
 def create_app(
         engine_id,
@@ -38,24 +38,24 @@ def create_app(
             app : Flask application instance.
     """
     app = Flask(__name__)
-    app.debug = True
-    # debug
+    app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
     # Register app blueprints
     app.register_blueprint(html, url_prefix=r"/")
 
     # Set SQLAlchemy configs
-    # app = set_database_config(app, test_config=test_config)
-    # app.app_context().push()
-    # db.drop_all()
-    # db.create_all()
+    app = set_database_config(app, test_config=test_config)
+    app.app_context().push()
+    db.drop_all()
+    db.create_all()
 
-    # config_helper.engine_id = engine_id
-    # config_helper.grid_node_address = grid_node_address
-    # config_helper.grid_gateway_address = grid_gateway_address
-    # config_helper.data_dir = data_dir
-    # config_helper.dataset_id = dataset_id
+    config_helper.engine_id = engine_id
+    config_helper.grid_node_address = grid_node_address
+    config_helper.grid_gateway_address = grid_gateway_address
+    config_helper.data_dir = data_dir
+    config_helper.dataset_id = dataset_id
+
 
     # start a scheduler regularly reading and saving the sensor data of the workers engines
     start_sensor_scheduler(app, cycle_length=cycle_length)
@@ -63,7 +63,9 @@ def create_app(
     return app
 
 def prompt():
-    print("Executing Task...")
+    print("*********************************************************************")
+    print("******************** Executing Task...")
+    print("*********************************************************************")
 
 
 def start_sensor_scheduler(app, cycle_length):
@@ -73,14 +75,17 @@ def start_sensor_scheduler(app, cycle_length):
     :param cycle_length: The length of one cycle in seconds
     :return: None
     """
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.DEBUG)
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+
+    scheduler = BackgroundScheduler(daemon=True)
+    # scheduler.add_job(handle_current_sensors, 'interval', args=[app, scheduler], seconds=cycle_length)
+    for i in range(100):
+        print("Adding measurement #" + str(i))
+        handle_current_sensors(app, scheduler)
 
 
-
-    scheduler = BackgroundScheduler(daemon=False)
-    # scheduler.add_job(handle_current_sensors, 'interval', args=[app, scheduler], misfire_grace_time=None, seconds=10) 
-    scheduler.add_job(prompt,'interval', seconds=2)
-    # cycle_length
+    # scheduler.add_job(prompt,'interval', seconds=2, end_date=None)    
+    
     scheduler.start()
 
     # Shut down the scheduler when exiting the app

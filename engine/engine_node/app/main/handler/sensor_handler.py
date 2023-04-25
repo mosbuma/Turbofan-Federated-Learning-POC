@@ -43,10 +43,10 @@ def handle_current_sensors(app, scheduler):
     if sensor_data is None:
         print("@@@@@@ import sensor data")
         sensor_data = import_data()
-        print(sensor_data)
+        # print(sensor_data)
     else:
         print("@@@@@@ have sensor data")
-        print(sensor_data)
+        # print(sensor_data)
 
 
     if get_state() == State.STOPPED:
@@ -63,8 +63,9 @@ def handle_current_sensors(app, scheduler):
         lookahead = sensor_data.iloc[current_row]
     except IndexError:
         # shutdown scheduler as there is no data left
-        scheduler.shutdown(wait=False)
+        # scheduler.shutdown(wait=False)
         last_run = True
+
 
     current_sensor_values = sensor_data.iloc[current_row - 1]
     current_cycle = current_sensor_values['time_in_cycles']
@@ -88,8 +89,8 @@ def handle_current_sensors(app, scheduler):
         db.session.commit()
         # retrieve all current sensor data
         sensor_data_all = pd.read_sql(db.session.query(SensorData).statement, db.session.bind)
-        print("@@@@ -> reading sensor data")
-        print(sensor_data_all)
+        # print("@@@@ -> reading sensor data")
+        # print(sensor_data_all)
 
     # we need at least an amount of data rows of our window size for inference
     if sensor_data_all.shape[0] >= data_helper.WINDOW_SIZE:

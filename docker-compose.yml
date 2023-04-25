@@ -42,7 +42,7 @@ services:
       - DATASET_ID=1
       - CYCLE_LENGTH=2
       - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=90
+      - GUNICORN_TIMEOUT=10
       - GUNICORN_LOG-FILE=-
     depends_on:
       - 'gateway'
