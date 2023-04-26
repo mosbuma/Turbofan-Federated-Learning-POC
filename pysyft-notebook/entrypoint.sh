@@ -10,4 +10,4 @@ fi
 
 cd $WORKSPACE
 #jupyter notebook --ip=`cat /etc/hosts |tail -n 1|cut -f 1` --allow-root
-jupyter lab --ip=`cat /etc/hosts |tail -n 1|cut -f 1` --allow-root
+jupyter lab -NotebookApp.token='amdex_rulez' --ip=`cat /etc/hosts |tail -n 1|cut -f 1` --allow-root

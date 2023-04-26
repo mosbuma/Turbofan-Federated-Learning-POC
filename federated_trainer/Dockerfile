@@ -12,4 +12,6 @@ COPY . /app
 WORKDIR /app
 RUN rm -f /app/**/*.db
 
+RUN chown -R root:root /models
+
 ENTRYPOINT ["sh", "entrypoint.sh"]

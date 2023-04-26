@@ -4,6 +4,7 @@ import os
 from flask import render_template
 from flask import Response
 from flask import send_from_directory
+from flask import current_app
 
 from flask_cors import cross_origin
 
@@ -13,6 +14,8 @@ from .handler.state_handler import get_state
 from .handler import sensor_handler
 from .handler.stats_handler import get_all_stats
 from .persistence import model_manager as mm
+
+from .handler.data_handler import handle_all_data
 
 
 # ======= WEB ROUTES ======
@@ -104,6 +107,29 @@ def get_sensor_data():
     return Response(
         json.dumps(response), status=200, mimetype="application/json"
     )
+
+@html.route("/process", methods=["GET"])
+@cross_origin()
+def process():
+    """ Process all data for the current engine
+
+       Returns:
+            Response : Basic information.
+    """
+    app = current_app._get_current_object()
+    print("start data processing");
+    handle_all_data(app)
+
+    response = {
+        "id": config_helper.engine_id,
+        "grid_node_address": config_helper.grid_node_address,
+        "grid_gateway_address": config_helper.grid_gateway_address
+    }
+
+    return Response(
+        json.dumps(response), status=200, mimetype="application/json"
+    )
+
 
 
 # ======= REST API END =======

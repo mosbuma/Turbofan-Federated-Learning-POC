@@ -29,7 +29,10 @@ maintenance_start_cycle = 0
 shared_data = []
 shared_labels = []
 
-def handle_current_sensors(app, scheduler):
+processing_done = False
+
+
+def handle_all_data(app):
     """ Read in the next set of sensor data and handle it.
 
     :param app: The flask app context for accessing the db
@@ -38,22 +41,33 @@ def handle_current_sensors(app, scheduler):
     """
     global sensor_data, current_row, current_cycle, current_prediction, maintenance_start_cycle
 
-    # read the sensor data and cache it
-    if sensor_data is None:
-        sensor_data = import_data()
-        # print(sensor_data)
-    # else:
-        # print(sensor_data)
+    my_grid = PublicGridNetwork(hook, "http://{}".format(config_helper.grid_gateway_address))
 
+
+
+    # read the sensor data and cache it
+    print("import sensor data", flush=True);
+    sensor_data = import_data()
+
+    print("processing sensor data", flush=True);
+    while not processing_done:
+        handle_single_cycle(app)
+    
+    return None;
+
+def handle_single_cycle(app):
+
+    global sensor_data, current_row, current_cycle, current_prediction, maintenance_start_cycle, processing_done
+
+    # print("* handle single cycle from row #" + str(current_row))
 
     if get_state() == State.STOPPED:
         # the engine_node is not running so we start it now
         set_state(State.RUNNING)
-        print("-> Engine started")
+        print("-> Engine started", flush=True)
 
     current_row += 1
 
-    last_run = False
     lookahead = None
     try:
         # lookahead to notice when all series will end
@@ -61,8 +75,7 @@ def handle_current_sensors(app, scheduler):
     except IndexError:
         # shutdown scheduler as there is no data left
         # scheduler.shutdown(wait=False)
-        last_run = True
-
+        processing_done = True
 
     current_sensor_values = sensor_data.iloc[current_row - 1]
     current_cycle = current_sensor_values['time_in_cycles']
@@ -73,7 +86,7 @@ def handle_current_sensors(app, scheduler):
         skip_cycle = handle_series_ended(app)
         maintenance_start_cycle = None
         if skip_cycle:
-            return
+            return 
 
     # create DB model and set properties
     sensor_data_object = SensorData()
@@ -96,7 +109,7 @@ def handle_current_sensors(app, scheduler):
         # switch to maintenance if we predicted the failure is less than 10 cycles ahead
         if current_prediction is not None and current_prediction < MAINTENANCE_LEAD_TIME:
             if get_state() != State.MAINTENANCE:
-                print("+++ Switching to maintenance +++")
+                print("+++ Switching to maintenance +++", flush=True)
                 set_state(State.MAINTENANCE)
                 maintenance_start_cycle = current_cycle
     # else:
@@ -109,14 +122,13 @@ def handle_current_sensors(app, scheduler):
     #     "-" if current_prediction is None else current_prediction
     # ))
 
-    if last_run:
+    if processing_done:
         # all series ended, let´s stop the engine_node
         # print("@@@@ -> set state stopped")
         set_state(State.STOPPED)
-        print("-> Engine stopped")
+        print("-> Engine stopped", flush=True)
 
     return None
-
 
 def handle_series_ended(app):
     """ Handle a sensor data series after it ended.
@@ -136,29 +148,26 @@ def handle_series_ended(app):
         current_row -= 1
         # track unsuccessful prediction
         track(Stats.FAILURES)
-        print("### Engine failure ###")
+        print("### Engine failure ###", flush=True)
         move_current_data_to_training(app)
         skip_cycle = True
-
-        current_row = 0
     elif current_state == State.MAINTENANCE:
         # the engine is in maintenance while the last series ended so everything is fine, we can start with the new
         # series
         set_state(State.RUNNING)
         if current_cycle - maintenance_start_cycle > MAINTENANCE_LEAD_TIME + MAINTENANCE_GRACE_PERIOD:
             # maintenance prevented failure but was too early
-            print("+++ Maintenance was too early +++")
+            print("+++ Maintenance was too early +++", flush=True)
             track(Stats.PREVENTED_FAILURES_TOO_EARLY)
         else:
             # maintenance successfully prevented the failure in time
-            print("+++ Maintenance successfully prevented a failure +++")
+            print("+++ Maintenance successfully prevented a failure +++", flush=True)
             track(Stats.PREVENTED_FAILURES)
         move_current_data_to_training(app)
-        current_row = 0
     elif current_state == State.FAILURE:
         # the engine_node is already failing, we could now start over with the next series
         set_state(State.RUNNING)
-        print("-> Engine fixed and up again")
+        print("-> Engine fixed and up again", flush=True)
 
     return skip_cycle
 
@@ -203,6 +212,10 @@ def move_current_data_to_training(app):
 
     # send the data to the grid node
     grid_node = NodeClient(hook, address="ws://{}".format(config_helper.grid_node_address))
+    print("-----------------------------------------------------------")
+    print(grid_node)
+    print("-----------------------------------------------------------", flush=True)
+
     shared_data.append(tensor_x_train_new.send(grid_node))
     shared_labels.append(tensor_y_train_new.send(grid_node))
 

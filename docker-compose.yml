@@ -1,7 +1,7 @@
 version: '3'
 services:
   notebooks:
-    image: heurekalabs/pysyft-notebook:latest
+    image: pysyft-notebook:latest
     container_name: notebooks
     environment:
       - JUPYTER_ENABLE_LAB=yes
@@ -42,7 +42,7 @@ services:
       - DATASET_ID=1
       - CYCLE_LENGTH=2
       - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=10
+      - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
       - 'gateway'
@@ -54,7 +54,7 @@ services:
     volumes:
       - ./data:/data
   engine2:
-    image: heurekalabs/turbofan-engine:latest
+    image: turbofan-engine:latest
     container_name: engine2
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
@@ -82,7 +82,7 @@ services:
     volumes:
       - ./data:/data
   engine3:
-    image: heurekalabs/turbofan-engine:latest
+    image: turbofan-engine:latest
     container_name: engine3
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
@@ -110,7 +110,7 @@ services:
     volumes:
       - ./data:/data
   engine4:
-    image: heurekalabs/turbofan-engine:latest
+    image: turbofan-engine:latest
     container_name: engine4
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
@@ -138,7 +138,7 @@ services:
     volumes:
       - ./data:/data
   engine5:
-    image: heurekalabs/turbofan-engine:latest
+    image: turbofan-engine:latest
     container_name: engine5
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000

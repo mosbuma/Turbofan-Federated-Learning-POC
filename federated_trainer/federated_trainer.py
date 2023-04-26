@@ -260,6 +260,7 @@ if __name__ == "__main__":
     print("Deploying initial model to grid...")
 
     initial_model = load_initial_model()
+    print("***** loaded initial model")
     serve_model(initial_model)
 
     print("Started Federated Trainer... watching for new data.")
