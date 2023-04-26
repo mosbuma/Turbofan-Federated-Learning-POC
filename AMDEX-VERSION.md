@@ -34,6 +34,6 @@
 
 ### engine node
 
-- removed scheduler
-- use http://<node ip>:800X/process to start creating data for training / testing (X = engine number)
+- removed scheduler, replaced with a single run worker thread that inserts the data
+- use http://<node ip>:800X/process to re-start creating data for training / testing (X = engine number)
 - docker logs engineX --follow for logging

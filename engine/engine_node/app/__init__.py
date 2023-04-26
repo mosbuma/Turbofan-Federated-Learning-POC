@@ -1,6 +1,9 @@
 import logging
 
 from flask import Flask
+from flask import current_app
+import threading
+import time
 # import time
 
 # from apscheduler.schedulers.background import BackgroundScheduler
@@ -61,8 +64,14 @@ def create_app(
     # start a scheduler regularly reading and saving the sensor data of the workers engines
     # start_sensor_scheduler(app, cycle_length=cycle_length)
     # handle_all_data(app)
+    thread = threading.Thread(target=start_simulation, args=[app])
+    thread.start()
 
     return app
+
+def start_simulation(app):
+    print("start simulation - start data processing", flush=True);
+    handle_all_data(app)
 
 # def prompt():
 #     print("*********************************************************************")
