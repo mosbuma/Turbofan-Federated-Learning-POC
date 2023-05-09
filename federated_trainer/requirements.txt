@@ -1,7 +1,7 @@
 apscheduler
 matplotlib
 msgpack==0.6.2
-numpy
+numpy==1.21.1 
 pandas
 requests
 syft == 0.2.2a1

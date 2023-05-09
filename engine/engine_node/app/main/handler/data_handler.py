@@ -256,7 +256,8 @@ def predict_rul(data):
     prediction = None
     try:
         prediction = int(my_grid.run_remote_inference(MODEL_ID, sensor_data_inference))
-    except RuntimeError:
+    except RuntimeError as e:
+        print('An error occurred: ', e)
         print('Model "{}" does not exist.'.format(MODEL_ID))
         pass
 

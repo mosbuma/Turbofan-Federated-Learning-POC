@@ -12,6 +12,8 @@ services:
       - '8888:8888'
     volumes:
       - ./:/notebooks
+    depends_on:
+      - 'amdex_server'
   gateway:
     image: heurekalabs/grid-gateway:latest
     container_name: grid-gateway
@@ -166,7 +168,7 @@ services:
     volumes:
       - ./data:/data
   trainer:
-    image: heurekalabs/turbofan-federated-trainer:latest
+    image: turbofan-federated-trainer:latest
     container_name: trainer
     environment:
       - NEW_DATA_THRESHOLD=300
@@ -186,6 +188,16 @@ services:
     volumes:
       - ./data:/data
       - ./models:/models
+  amdex_server:
+    image: amdex_server:latest
+    container_name: amdex_server
+    ports:
+      - '8081:8081'
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - grid_default
 networks:
   grid_default:
     driver: bridge

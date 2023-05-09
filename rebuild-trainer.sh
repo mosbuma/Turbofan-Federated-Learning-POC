@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #build the new engine image
-docker build -t trainer ./federated_trainer --no-cache; \
+docker build -t trainer ./federated_trainer --no-cache;
 
 #restart engines
 for CONTAINER_NAME in trainer; do  # engine2 engine3 engine4 engine5
