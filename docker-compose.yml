@@ -12,8 +12,8 @@ services:
       - '8888:8888'
     volumes:
       - ./:/notebooks
-    depends_on:
-      - 'amdex_server'
+    # depends_on:
+    #   - 'amdex_server'
   gateway:
     image: heurekalabs/grid-gateway:latest
     container_name: grid-gateway
