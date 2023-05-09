@@ -69,6 +69,7 @@ parser.set_defaults(use_test_config=False)
 
 
 if __name__ == "__main__":
+    print("Starting Turbofan Engine Node")
     args = parser.parse_args()
 
     db_path = "sqlite:///database{}.db".format(args.id)
@@ -86,7 +87,9 @@ if __name__ == "__main__":
     server = pywsgi.WSGIServer(("", args.port), app, handler_class=WebSocketHandler)
     server.serve_forever()
 else:
+    print("Starting Turbofan Engine Node (Deployment Mode)", os.environ.get("ENGINE_ID", None))
     # DEPLOYMENT MODE (we use gunicorn's worker to perform load balancing)
+
 
     # These environment variables must be set before starting the application.
     engine_id = os.environ.get("ENGINE_ID", None)

@@ -1,16 +1,21 @@
 import logging
 
 from flask import Flask
+from flask import current_app
+import threading
+import time
+# import time
 
-from apscheduler.schedulers.background import BackgroundScheduler
-import atexit
+# from apscheduler.schedulers.background import BackgroundScheduler
+# import atexit
 
-from .main import html, db
+from .main import html
+from .main import db
 from .main.persistence.utils import set_database_config
 from .main.handler import sensor_handler
 from .main.handler.sensor_handler import handle_current_sensors
+from .main.handler.data_handler import handle_all_data
 from .main.helper import config_helper
-
 
 def create_app(
         engine_id,
@@ -55,24 +60,40 @@ def create_app(
     config_helper.data_dir = data_dir
     config_helper.dataset_id = dataset_id
 
+
     # start a scheduler regularly reading and saving the sensor data of the workers engines
-    start_sensor_scheduler(app, cycle_length=cycle_length)
+    # start_sensor_scheduler(app, cycle_length=cycle_length)
+    # handle_all_data(app)
+    thread = threading.Thread(target=start_simulation, args=[app])
+    thread.start()
 
     return app
 
+def start_simulation(app):
+    print("start simulation - start data processing", flush=True);
+    handle_all_data(app)
 
-def start_sensor_scheduler(app, cycle_length):
-    """ Start a scheduler to regularly read in and save the current sensor data.
+# def prompt():
+#     print("*********************************************************************")
+#     print("******************** Executing Task...")
+#     print("*********************************************************************")
 
-    :param app: The app context
-    :param cycle_length: The length of one cycle in seconds
-    :return: None
-    """
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(handle_current_sensors, 'interval', args=[app, scheduler], seconds=cycle_length)
-    scheduler.start()
+# def start_sensor_scheduler(app, cycle_length):
+#     """ Start a scheduler to regularly read in and save the current sensor data.
 
-    # Shut down the scheduler when exiting the app
-    atexit.register(lambda: scheduler.shutdown())
+#     :param app: The app context
+#     :param cycle_length: The length of one cycle in seconds
+#     :return: None
+#     """
+#     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+
+#     scheduler = BackgroundScheduler(daemon=True)
+#     scheduler.add_job(handle_current_sensors, 'interval', args=[app, scheduler], seconds=cycle_length)
+
+#     # scheduler.add_job(prompt,'interval', seconds=2, end_date=None)    
+    
+#     scheduler.start()
+
+#     # Shut down the scheduler when exiting the app
+#     atexit.register(lambda: scheduler.shutdown())

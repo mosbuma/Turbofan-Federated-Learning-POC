@@ -191,12 +191,20 @@ def serve_model(model):
     # note: the current implementation only returns the first node found
     node = grid.query_model_hosts(MODEL_ID)
     if node:
+        print("Replacing existing model on node", node)
         # the model was already deployed, delete it before serving
         node.delete_model(MODEL_ID)
         node.serve_model(trace_model, model_id=MODEL_ID, allow_remote_inference=True)
     else:
+        print("start Serve Model")
         grid.serve_model(trace_model, id=MODEL_ID, allow_remote_inference=True)
 
+    # Get the list of connected nodes
+    response = grid._ask_gateway("GET", "get-all-nodes")
+
+    # Print the connected nodes
+    for node_id, node_info in response.items():
+        print(f"Node ID: {node_id}, Node address: {node_info['address']}")
 
 def plot_history(rmse):
     """ Plot the train and validation loss to an image and to the console.
@@ -260,6 +268,7 @@ if __name__ == "__main__":
     print("Deploying initial model to grid...")
 
     initial_model = load_initial_model()
+    print("***** loaded initial model")
     serve_model(initial_model)
 
     print("Started Federated Trainer... watching for new data.")

@@ -66,10 +66,11 @@ def create_app(debug=False, n_replica=None, test_config=None):
 
     app.config["N_REPLICA"] = n_replica
 
+    global db
+
     from .main import main as main_blueprint, ws
     from .main import db
 
-    global db
     sockets = Sockets(app)
 
     # Set SQLAlchemy configs
