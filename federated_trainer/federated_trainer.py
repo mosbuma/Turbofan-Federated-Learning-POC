@@ -26,7 +26,7 @@ from helper.turbofan_model import TurbofanModel
 
 hook = sy.TorchHook(torch)
 
-matplotlib.use('agg')
+matplotlib.use("agg")
 
 DATA_TAGS = ("#X", "#turbofan", "#dataset")
 LABEL_TAGS = ("#Y", "#turbofan", "#dataset")
@@ -89,7 +89,7 @@ parser.add_argument(
 
 
 def handle_interval():
-    """ Check the grid for enough new data and then start a new training round. """
+    """Check the grid for enough new data and then start a new training round."""
     global training_rounds
 
     inputs, labels = get_grid_data()
@@ -105,7 +105,7 @@ def handle_interval():
 
 
 def get_grid_data():
-    """ Retrieve all data from the grid.
+    """Retrieve all data from the grid.
 
     :return: A tuple with the input data and labels from the grid
     """
@@ -117,7 +117,7 @@ def get_grid_data():
 
 
 def filter_new_data(inputs, labels):
-    """ Filter data that was already used in earlier training rounds.
+    """Filter data that was already used in earlier training rounds.
 
     :param inputs: Input to filter
     :param labels: Labels to filter
@@ -139,7 +139,7 @@ def filter_new_data(inputs, labels):
 
 
 def remember_data_used(inputs, labels):
-    """ Add the given inputs and labels to global dictionaries to filter them in later training rounds.
+    """Add the given inputs and labels to global dictionaries to filter them in later training rounds.
 
     :param inputs: Inputs already used in training
     :param labels: Labels already used in training
@@ -153,7 +153,7 @@ def remember_data_used(inputs, labels):
 
 
 def save_model(model):
-    """ Save a torch model to disk.
+    """Save a torch model to disk.
 
     :param model: Model to save
     """
@@ -161,7 +161,7 @@ def save_model(model):
 
 
 def load_initial_model():
-    """ Load the model from the initial training from disk.
+    """Load the model from the initial training from disk.
 
     :return: The initial model
     """
@@ -169,7 +169,7 @@ def load_initial_model():
 
 
 def load_latest_model():
-    """ Load the latest model created during federated learning from disk.
+    """Load the latest model created during federated learning from disk.
 
     :return: The latest model
     """
@@ -180,54 +180,70 @@ def load_latest_model():
 
 
 def serve_model(model):
-    """ Serve the model to the grid.
+    """Serve the model to the grid.
 
     :param model: Model to serve
     """
     trace_model = torch.jit.trace(model, torch.rand((1, WINDOW_SIZE, 11)))
 
+    print(
+        "Creating public gateway on ",
+        "http://{}".format(grid_gateway_address),
+        flush=True,
+    )
     grid = PublicGridNetwork(hook, "http://{}".format(grid_gateway_address))
 
     # note: the current implementation only returns the first node found
     node = grid.query_model_hosts(MODEL_ID)
     if node:
-        print("Replacing existing model on node", node)
+        print("Replacing existing model on node", node, flush=True)
         # the model was already deployed, delete it before serving
         node.delete_model(MODEL_ID)
         node.serve_model(trace_model, model_id=MODEL_ID, allow_remote_inference=True)
     else:
-        print("start Serve Model")
+        print("start Serve Model", flush=True)
         grid.serve_model(trace_model, id=MODEL_ID, allow_remote_inference=True)
 
     # Get the list of connected nodes
-    response = grid._ask_gateway("GET", "get-all-nodes")
+    # response = grid._ask_gateway("GET", "get-all-nodes")
 
     # Print the connected nodes
-    for node_id, node_info in response.items():
-        print(f"Node ID: {node_id}, Node address: {node_info['address']}")
+    # for node_id, node_info in response.items():
+    #     print(f"Node ID: {node_id}, Node address: {node_info['address']}", flush=True)
+
 
 def plot_history(rmse):
-    """ Plot the train and validation loss to an image and to the console.
+    """Plot the train and validation loss to an image and to the console.
 
     :param rmse: The RMSE score to print in the image
     """
     plt.figure()
-    plt.xlabel('Epoch')
-    plt.plot(history['epoch'], np.array(history['loss']), label='Train Loss')
-    plt.plot(history['epoch'], np.array(history['val_loss']), label='Validation loss')
+    plt.xlabel("Epoch")
+    plt.plot(history["epoch"], np.array(history["loss"]), label="Train Loss")
+    plt.plot(history["epoch"], np.array(history["val_loss"]), label="Validation loss")
     plt.legend()
     plt.title("RMSE: {:7.2f}".format(rmse))
-    plt.savefig('{}/turbofan_fl_loss_{}.png'.format(model_dir, training_rounds))
+    plt.savefig("{}/turbofan_fl_loss_{}.png".format(model_dir, training_rounds))
 
     # plot to console
     fig = tpl.figure()
-    fig.plot(np.array(history['epoch']), np.array(history['loss']), label='Train Loss', xlabel='Epoch')
-    fig.plot(np.array(history['epoch']), np.array(history['val_loss']), label='Validation loss', xlabel='Epoch')
+    fig.plot(
+        np.array(history["epoch"]),
+        np.array(history["loss"]),
+        label="Train Loss",
+        xlabel="Epoch",
+    )
+    fig.plot(
+        np.array(history["epoch"]),
+        np.array(history["val_loss"]),
+        label="Validation loss",
+        xlabel="Epoch",
+    )
     fig.show()
 
 
 def start_training_round(inputs, labels):
-    """ Start a new federated training round.
+    """Start a new federated training round.
 
     :param inputs: The inputs from the grid
     :param labels: The labels from the grid
@@ -236,7 +252,9 @@ def start_training_round(inputs, labels):
     labels_list = list(labels.values())
     val_data, val_labels = get_validation_data(data_dir)
     latest_model = load_latest_model()
-    model = start_federated_training(latest_model, inputs_list, labels_list, val_data, val_labels, epochs)
+    model = start_federated_training(
+        latest_model, inputs_list, labels_list, val_data, val_labels, epochs
+    )
 
     # evaluate model
     test_data, test_labels = get_test_data(data_dir)
@@ -263,7 +281,7 @@ if __name__ == "__main__":
     data_dir = args.data_dir
     model_dir = args.model_dir
 
-    logging.getLogger('apscheduler').setLevel(logging.ERROR)
+    logging.getLogger("apscheduler").setLevel(logging.ERROR)
 
     print("Deploying initial model to grid...")
 
@@ -274,7 +292,7 @@ if __name__ == "__main__":
     print("Started Federated Trainer... watching for new data.")
 
     scheduler = BlockingScheduler(daemon=True)
-    scheduler.add_job(handle_interval, 'interval', args=[], seconds=scheduler_interval)
+    scheduler.add_job(handle_interval, "interval", args=[], seconds=scheduler_interval)
 
     # Shut down the scheduler when exiting
     atexit.register(lambda: scheduler.shutdown())
