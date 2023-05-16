@@ -15,7 +15,7 @@ from ..helper import data_helper
 
 hook = sy.TorchHook(torch)
 
-MODEL_ID = 'turbofan'
+MODEL_ID = "turbofan"
 MAINTENANCE_LEAD_TIME = 10
 MAINTENANCE_GRACE_PERIOD = 5
 
@@ -29,8 +29,9 @@ maintenance_start_cycle = 0
 shared_data = []
 shared_labels = []
 
+
 def handle_current_sensors(app, scheduler):
-    """ Read in the next set of sensor data and handle it.
+    """Read in the next set of sensor data and handle it.
 
     :param app: The flask app context for accessing the db
     :param scheduler: Scheduler object to stop it in the end
@@ -38,13 +39,15 @@ def handle_current_sensors(app, scheduler):
     """
     global sensor_data, current_row, current_cycle, current_prediction, maintenance_start_cycle
 
+    print("handle current sensors", flush=True)
+
     # read the sensor data and cache it
     if sensor_data is None:
+        print("import sensor data")
         sensor_data = import_data()
         # print(sensor_data)
     # else:
-        # print(sensor_data)
-
+    # print(sensor_data)
 
     if get_state() == State.STOPPED:
         # the engine_node is not running so we start it now
@@ -52,6 +55,7 @@ def handle_current_sensors(app, scheduler):
         print("-> Engine started")
 
     current_row += 1
+    print("** handle sensor data - current row {}".format(current_row))
 
     last_run = False
     lookahead = None
@@ -63,12 +67,11 @@ def handle_current_sensors(app, scheduler):
         # scheduler.shutdown(wait=False)
         last_run = True
 
-
     current_sensor_values = sensor_data.iloc[current_row - 1]
-    current_cycle = current_sensor_values['time_in_cycles']
+    current_cycle = current_sensor_values["time_in_cycles"]
 
     # if the next series just started check what to do
-    if lookahead is None or int(lookahead['time_in_cycles'] == 1):
+    if lookahead is None or int(lookahead["time_in_cycles"] == 1):
         current_prediction = None
         skip_cycle = handle_series_ended(app)
         maintenance_start_cycle = None
@@ -85,7 +88,9 @@ def handle_current_sensors(app, scheduler):
         db.session.add(sensor_data_object)
         db.session.commit()
         # retrieve all current sensor data
-        sensor_data_all = pd.read_sql(db.session.query(SensorData).statement, db.session.bind)
+        sensor_data_all = pd.read_sql(
+            db.session.query(SensorData).statement, db.session.bind
+        )
         # print("@@@@ -> reading sensor data")
         # print(sensor_data_all)
 
@@ -94,7 +99,10 @@ def handle_current_sensors(app, scheduler):
         current_prediction = predict_rul(sensor_data_all)
 
         # switch to maintenance if we predicted the failure is less than 10 cycles ahead
-        if current_prediction is not None and current_prediction < MAINTENANCE_LEAD_TIME:
+        if (
+            current_prediction is not None
+            and current_prediction < MAINTENANCE_LEAD_TIME
+        ):
             if get_state() != State.MAINTENANCE:
                 print("+++ Switching to maintenance +++")
                 set_state(State.MAINTENANCE)
@@ -119,7 +127,7 @@ def handle_current_sensors(app, scheduler):
 
 
 def handle_series_ended(app):
-    """ Handle a sensor data series after it ended.
+    """Handle a sensor data series after it ended.
 
     :param app: The flask app context for accessing the db
     :return: Boolean whether the current cycle should be skipped
@@ -145,7 +153,10 @@ def handle_series_ended(app):
         # the engine is in maintenance while the last series ended so everything is fine, we can start with the new
         # series
         set_state(State.RUNNING)
-        if current_cycle - maintenance_start_cycle > MAINTENANCE_LEAD_TIME + MAINTENANCE_GRACE_PERIOD:
+        if (
+            current_cycle - maintenance_start_cycle
+            > MAINTENANCE_LEAD_TIME + MAINTENANCE_GRACE_PERIOD
+        ):
             # maintenance prevented failure but was too early
             print("+++ Maintenance was too early +++")
             track(Stats.PREVENTED_FAILURES_TOO_EARLY)
@@ -164,33 +175,39 @@ def handle_series_ended(app):
 
 
 def import_data():
-    """ Import the turbofan training data for this worker from disk.
+    """Import the turbofan training data for this worker from disk.
 
     :return: The training dataset for this worker
     """
     dirname = os.getcwd()
     folder_path = os.path.join(dirname, config_helper.data_dir)
-    data_path = os.path.join(folder_path, "train_data_worker_{}.txt".format(config_helper.dataset_id))
+    data_path = os.path.join(
+        folder_path, "train_data_worker_{}.txt".format(config_helper.dataset_id)
+    )
     data = pd.read_csv(data_path)
-    data.set_index('time_in_cycles')
+    data.set_index("time_in_cycles")
 
     return data
 
 
 def move_current_data_to_training(app):
-    """ Read all current sensor data from the db, pre-process it for model training and send it to the local worker.
+    """Read all current sensor data from the db, pre-process it for model training and send it to the local worker.
 
     :param app: The flask app context for accessing the db
     :return: None
     """
     with app.app_context():
         # read all sensor data from DB into a pandas frame
-        new_train_data = pd.read_sql(db.session.query(SensorData).statement, db.session.bind)
+        new_train_data = pd.read_sql(
+            db.session.query(SensorData).statement, db.session.bind
+        )
 
     # data preprocessing for training
     new_train_data = data_helper.add_rul_to_train_data(new_train_data)
     data_helper.drop_unnecessary_columns(new_train_data)
-    x_train_new, y_train_new = data_helper.transform_to_windowed_data(new_train_data, with_labels=True)
+    x_train_new, y_train_new = data_helper.transform_to_windowed_data(
+        new_train_data, with_labels=True
+    )
     y_train_new = data_helper.clip_rul(y_train_new)
 
     # transform to torch tensors
@@ -198,11 +215,17 @@ def move_current_data_to_training(app):
     tensor_y_train_new = torch.Tensor(y_train_new)
 
     # tag the data so it can be searched within the grid
-    tensor_x_train_new = tensor_x_train_new.tag("#X", "#turbofan", "#dataset").describe("The input datapoints to the turbofan dataset.")
-    tensor_y_train_new = tensor_y_train_new.tag("#Y", "#turbofan", "#dataset").describe("The input labels to the turbofan dataset.")
+    tensor_x_train_new = tensor_x_train_new.tag("#X", "#turbofan", "#dataset").describe(
+        "The input datapoints to the turbofan dataset."
+    )
+    tensor_y_train_new = tensor_y_train_new.tag("#Y", "#turbofan", "#dataset").describe(
+        "The input labels to the turbofan dataset."
+    )
 
     # send the data to the grid node
-    grid_node = NodeClient(hook, address="ws://{}".format(config_helper.grid_node_address))
+    grid_node = NodeClient(
+        hook, address="ws://{}".format(config_helper.grid_node_address)
+    )
     shared_data.append(tensor_x_train_new.send(grid_node))
     shared_labels.append(tensor_y_train_new.send(grid_node))
 
@@ -214,7 +237,7 @@ def move_current_data_to_training(app):
 
 
 def prepare_data_for_prediction(data):
-    """ Perform data pre-processing for predictions.
+    """Perform data pre-processing for predictions.
 
     :param data: The data to pre-process
     :return: The prepared data as tensor
@@ -229,21 +252,26 @@ def prepare_data_for_prediction(data):
 
 
 def predict_rul(data):
-    """ Predict the RUL for the given data.
+    """Predict the RUL for the given data.
 
     :param data: The data to predict the RUL for
     :return: The predicted RUL
     """
+
     # prepare the last data window for inference
     sensor_data_inference = prepare_data_for_prediction(data.copy())
 
     # predict the current RUL
-    my_grid = PublicGridNetwork(hook, "http://{}".format(config_helper.grid_gateway_address))
+    my_grid = PublicGridNetwork(
+        hook, "http://{}".format(config_helper.grid_gateway_address)
+    )
 
     prediction = None
     try:
         prediction = int(my_grid.run_remote_inference(MODEL_ID, sensor_data_inference))
-    except RuntimeError:
+        print('Predict RUL success "{}".'.format(prediction))
+    except RuntimeError as e:
+        print('Predict Rul Error: "{}"'.format(e))
         print('Model "{}" does not exist.'.format(MODEL_ID))
         pass
 

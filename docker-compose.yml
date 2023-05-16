@@ -11,7 +11,8 @@ services:
     ports:
       - '8888:8888'
     volumes:
-      - ./:/notebooks
+      - ./notebooks:/notebooks
+      - ./localstorage-trainer:/localstorage-trainer
     # depends_on:
     #   - 'amdex_server'
   gateway:
@@ -42,7 +43,7 @@ services:
       - GRID_GATEWAY_ADDRESS=grid-gateway:5000
       - DATA_DIR=/data
       - DATASET_ID=1
-      - CYCLE_LENGTH=2
+      - CYCLE_LENGTH=1
       - GUNICORN_WORKER_CLASS=gevent
       - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
@@ -54,7 +55,7 @@ services:
       - '3001:3001'
       - '8001:8001'
     volumes:
-      - ./data:/data
+      - ./localstorage-engine1:/data
   engine2:
     image: turbofan-engine:latest
     container_name: engine2
@@ -72,7 +73,7 @@ services:
       - DATASET_ID=2
       - CYCLE_LENGTH=1
       - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=90
+      - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
       - 'gateway'
@@ -82,7 +83,7 @@ services:
       - '3002:3002'
       - '8002:8002'
     volumes:
-      - ./data:/data
+      - ./localstorage-engine2:/data
   engine3:
     image: turbofan-engine:latest
     container_name: engine3
@@ -100,7 +101,7 @@ services:
       - DATASET_ID=3
       - CYCLE_LENGTH=1
       - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=90
+      - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
       - 'gateway'
@@ -110,63 +111,7 @@ services:
       - '3003:3003'
       - '8003:8003'
     volumes:
-      - ./data:/data
-  engine4:
-    image: turbofan-engine:latest
-    container_name: engine4
-    environment:
-      - GRID_NETWORK_URL=http://grid-gateway:5000
-      - ID=gridnode4
-      - ADDRESS=http://engine4:3004
-      - DATABASE_URL=sqlite:///databaseGridEngine4.db
-      - PORT=3004
-      - ENGINE_ID=engine4
-      - ENGINE_PORT=8004
-      - GRID_NODE_ADDRESS=localhost:3004
-      - GRID_GATEWAY_ADDRESS=grid-gateway:5000
-      - DATA_DIR=/data
-      - DATASET_ID=4
-      - CYCLE_LENGTH=1
-      - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=90
-      - GUNICORN_LOG-FILE=-
-    depends_on:
-      - 'gateway'
-    networks:
-      - grid_default
-    ports:
-      - '3004:3004'
-      - '8004:8004'
-    volumes:
-      - ./data:/data
-  engine5:
-    image: turbofan-engine:latest
-    container_name: engine5
-    environment:
-      - GRID_NETWORK_URL=http://grid-gateway:5000
-      - ID=gridnode5
-      - ADDRESS=http://engine5:3005
-      - DATABASE_URL=sqlite:///databaseGridEngine5.db
-      - PORT=3005
-      - ENGINE_ID=engine5
-      - ENGINE_PORT=8005
-      - GRID_NODE_ADDRESS=localhost:3005
-      - GRID_GATEWAY_ADDRESS=grid-gateway:5000
-      - DATA_DIR=/data
-      - DATASET_ID=5
-      - CYCLE_LENGTH=1
-      - GUNICORN_WORKER_CLASS=gevent
-      - GUNICORN_TIMEOUT=90
-      - GUNICORN_LOG-FILE=-
-    depends_on:
-      - 'gateway'
-    networks:
-      - grid_default
-    ports:
-      - '3005:3005'
-      - '8005:8005'
-    volumes:
-      - ./data:/data
+      - ./localstorage-engine3:/data
   trainer:
     image: turbofan-federated-trainer:latest
     container_name: trainer
@@ -178,16 +123,15 @@ services:
       - DATA_DIR=/data
       - MODEL_DIR=/models
     depends_on:
+      - 'gateway'
       - 'engine1'
       - 'engine2'
       - 'engine3'
-      - 'engine4'
-      - 'engine5'
     networks:
       - grid_default
     volumes:
-      - ./data:/data
-      - ./models:/models
+      - ./localstorage-trainer/data:/data
+      - ./localstorage-trainer/models:/models
   amdex_server:
     image: amdex_server:latest
     container_name: amdex_server

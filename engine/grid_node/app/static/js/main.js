@@ -148,7 +148,7 @@ async function update_dataset_tags() {
 }
 
 async function sync_with_server() {
-  console.log('syncing with server');
+  console.log('syncing with server', (flush = True));
   await update_server_status();
   await update_models_list();
   await update_workers_list();

@@ -1,13 +1,10 @@
 import logging
 
 from flask import Flask
-from flask import current_app
-import threading
-import time
-# import time
 
-# from apscheduler.schedulers.background import BackgroundScheduler
-# import atexit
+
+from apscheduler.schedulers.gevent import GeventScheduler
+import atexit
 
 from .main import html
 from .main import db
@@ -17,29 +14,30 @@ from .main.handler.sensor_handler import handle_current_sensors
 from .main.handler.data_handler import handle_all_data
 from .main.helper import config_helper
 
-def create_app(
-        engine_id,
-        grid_node_address,
-        grid_gateway_address,
-        data_dir,
-        dataset_id,
-        cycle_length,
-        debug=False,
-        test_config=None
-):
-    """ Create / Configure flask socket application instance.
 
-        Args:
-            engine_id : The id of this engine.
-            grid_node_address : The address of the local grid node to connect.
-            grid_gateway_address : The address of the grid gateway.
-            data_dir : The directory containing the engine data.
-            dataset_id : The id of the worker dataset to use.
-            cycle_length : The length of one engine cycle.
-            debug (bool) : debug flag.
-            test_config (bool) : Mock database environment.
-        Returns:
-            app : Flask application instance.
+def create_app(
+    engine_id,
+    grid_node_address,
+    grid_gateway_address,
+    data_dir,
+    dataset_id,
+    cycle_length,
+    debug=False,
+    test_config=None,
+):
+    """Create / Configure flask socket application instance.
+
+    Args:
+        engine_id : The id of this engine.
+        grid_node_address : The address of the local grid node to connect.
+        grid_gateway_address : The address of the grid gateway.
+        data_dir : The directory containing the engine data.
+        dataset_id : The id of the worker dataset to use.
+        cycle_length : The length of one engine cycle.
+        debug (bool) : debug flag.
+        test_config (bool) : Mock database environment.
+    Returns:
+        app : Flask application instance.
     """
     app = Flask(__name__)
     app.debug = debug
@@ -60,40 +58,33 @@ def create_app(
     config_helper.data_dir = data_dir
     config_helper.dataset_id = dataset_id
 
-
     # start a scheduler regularly reading and saving the sensor data of the workers engines
-    # start_sensor_scheduler(app, cycle_length=cycle_length)
-    # handle_all_data(app)
-    thread = threading.Thread(target=start_simulation, args=[app])
-    thread.start()
+    start_sensor_scheduler(app, cycle_length=cycle_length)
 
     return app
 
+
 def start_simulation(app):
-    print("start simulation - start data processing", flush=True);
+    print("start simulation - start data processing", flush=True)
     handle_all_data(app)
 
-# def prompt():
-#     print("*********************************************************************")
-#     print("******************** Executing Task...")
-#     print("*********************************************************************")
 
+def start_sensor_scheduler(app, cycle_length):
+    """Start a scheduler to regularly read in and save the current sensor data.
 
-# def start_sensor_scheduler(app, cycle_length):
-#     """ Start a scheduler to regularly read in and save the current sensor data.
+    :param app: The app context
+    :param cycle_length: The length of one cycle in seconds
+    :return: None
+    """
 
-#     :param app: The app context
-#     :param cycle_length: The length of one cycle in seconds
-#     :return: None
-#     """
-#     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+    logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 
-#     scheduler = BackgroundScheduler(daemon=True)
-#     scheduler.add_job(handle_current_sensors, 'interval', args=[app, scheduler], seconds=cycle_length)
+    scheduler = GeventScheduler(daemon=True, timezone="Etc/UTC")
+    scheduler.add_job(
+        handle_current_sensors, "interval", args=[app, scheduler], seconds=cycle_length
+    )
 
-#     # scheduler.add_job(prompt,'interval', seconds=2, end_date=None)    
-    
-#     scheduler.start()
+    scheduler.start()
 
-#     # Shut down the scheduler when exiting the app
-#     atexit.register(lambda: scheduler.shutdown())
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())

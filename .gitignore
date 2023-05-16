@@ -13,9 +13,18 @@ __pycache__/
 
 # ignore data and database files
 data
+localstorage-trainer/data/*
+
+localstorage-engine1
+localstorage-engine2
+localstorage-engine3
+localstorage-engine4
+localstorage-engine5
 engine/engine_node/app/*.db
 engine/grid_node/app/*.db
 
 # ignore all model files except the initial model
 models/*
 !models/turbofan_initial.pt
+localstorage-trainer/models/*
+!localstorage-trainer/models/turbofan_initial.pt

@@ -105,22 +105,39 @@ def save_data(train_data_initial, train_data_worker, test_data_val, test_data_te
     :return: None
     """
     dirname = os.getcwd()
-    folder_path = os.path.join(dirname, "data")
 
-    train_data_initial_path = os.path.join(folder_path, "train_data_initial.txt")
+    trainerfolder_data_path = os.path.join(dirname, "localstorage-trainer", "data")
+    trainerfolder_models_path = os.path.join(dirname, "localstorage-trainer", "models")
+    if not os.path.exists(trainerfolder_data_path):
+        os.makedirs(trainerfolder_data_path)
+
+    if not os.path.exists(trainerfolder_models_path):
+        # NB create this path, is used by jupyter notebook to store initial model
+        os.makedirs(trainerfolder_models_path)
+
+    train_data_initial_path = os.path.join(
+        trainerfolder_data_path, "train_data_initial.txt"
+    )
     train_data_initial.to_csv(train_data_initial_path, index=False)
 
-    for index, data in enumerate(train_data_worker):
-        train_data_worker_path = os.path.join(
-            folder_path, "train_data_worker_{}.txt".format(index + 1)
-        )
-        data.to_csv(train_data_worker_path, index=False)
-
-    test_data_val_path = os.path.join(folder_path, "test_data_val.txt")
+    test_data_val_path = os.path.join(trainerfolder_data_path, "test_data_val.txt")
     test_data_val.to_csv(test_data_val_path, index=False)
 
-    test_data_test_path = os.path.join(folder_path, "test_data_test.txt")
+    test_data_test_path = os.path.join(trainerfolder_data_path, "test_data_test.txt")
     test_data_test.to_csv(test_data_test_path, index=False)
+
+    for index, data in enumerate(train_data_worker):
+        train_data_folder_path = os.path.join(
+            dirname, "localstorage-engine{}".format(index + 1)
+        )
+        train_data_worker_path = os.path.join(
+            train_data_folder_path,
+            "train_data_worker_{}.txt".format(index + 1),
+        )
+        if not os.path.exists(train_data_folder_path):
+            os.makedirs(train_data_folder_path)
+
+        data.to_csv(train_data_worker_path, index=False)
 
 
 def add_rul_to_test_data(test_data, test_data_rul):
