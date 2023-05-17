@@ -39,8 +39,6 @@ def handle_current_sensors(app, scheduler):
     """
     global sensor_data, current_row, current_cycle, current_prediction, maintenance_start_cycle
 
-    print("handle current sensors", flush=True)
-
     # read the sensor data and cache it
     if sensor_data is None:
         print("import sensor data")
@@ -55,7 +53,7 @@ def handle_current_sensors(app, scheduler):
         print("-> Engine started")
 
     current_row += 1
-    print("** handle sensor data - current row {}".format(current_row))
+    # print("** handle sensor data - current row {}".format(current_row))
 
     last_run = False
     lookahead = None
