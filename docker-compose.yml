@@ -34,12 +34,12 @@ services:
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
       - ID=gridnode1
-      - ADDRESS=http://engine1:3001
+      - ADDRESS=http://engine1:4001
       - DATABASE_URL=sqlite:///databaseGridEngine1.db
-      - PORT=3001
+      - PORT=4001
       - ENGINE_ID=engine1
       - ENGINE_PORT=8001
-      - GRID_NODE_ADDRESS=localhost:3001
+      - GRID_NODE_ADDRESS=localhost:4001
       - GRID_GATEWAY_ADDRESS=grid-gateway:5000
       - DATA_DIR=/data
       - DATASET_ID=1
@@ -52,7 +52,7 @@ services:
     networks:
       - grid_default
     ports:
-      - '3001:3001'
+      - '4001:4001'
       - '8001:8001'
     volumes:
       - ./localstorage-engine1:/data
@@ -62,12 +62,12 @@ services:
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
       - ID=gridnode2
-      - ADDRESS=http://engine2:3002
+      - ADDRESS=http://engine2:4002
       - DATABASE_URL=sqlite:///databaseGridEngine2.db
-      - PORT=3002
+      - PORT=4002
       - ENGINE_ID=engine2
       - ENGINE_PORT=8002
-      - GRID_NODE_ADDRESS=localhost:3002
+      - GRID_NODE_ADDRESS=localhost:4002
       - GRID_GATEWAY_ADDRESS=grid-gateway:5000
       - DATA_DIR=/data
       - DATASET_ID=2
@@ -80,7 +80,7 @@ services:
     networks:
       - grid_default
     ports:
-      - '3002:3002'
+      - '4002:4002'
       - '8002:8002'
     volumes:
       - ./localstorage-engine2:/data
@@ -90,12 +90,12 @@ services:
     environment:
       - GRID_NETWORK_URL=http://grid-gateway:5000
       - ID=gridnode3
-      - ADDRESS=http://engine3:3003
+      - ADDRESS=http://engine3:4003
       - DATABASE_URL=sqlite:///databaseGridEngine3.db
-      - PORT=3003
+      - PORT=4003
       - ENGINE_ID=engine3
       - ENGINE_PORT=8003
-      - GRID_NODE_ADDRESS=localhost:3003
+      - GRID_NODE_ADDRESS=localhost:4003
       - GRID_GATEWAY_ADDRESS=grid-gateway:5000
       - DATA_DIR=/data
       - DATASET_ID=3
@@ -108,7 +108,7 @@ services:
     networks:
       - grid_default
     ports:
-      - '3003:3003'
+      - '4003:4003'
       - '8003:8003'
     volumes:
       - ./localstorage-engine3:/data
