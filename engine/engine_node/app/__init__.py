@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from flask import Flask
 
@@ -11,7 +12,7 @@ from .main import db
 from .main.persistence.utils import set_database_config
 from .main.handler import sensor_handler
 from .main.handler.sensor_handler import handle_current_sensors
-from .main.handler.data_handler import handle_all_data
+from .main.handler.sensor_handler import handle_all_data_fast
 from .main.helper import config_helper
 
 
@@ -59,14 +60,23 @@ def create_app(
     config_helper.dataset_id = dataset_id
 
     # start a scheduler regularly reading and saving the sensor data of the workers engines
-    start_sensor_scheduler(app, cycle_length=cycle_length)
+    # start_sensor_scheduler(app, cycle_length=cycle_length)
+
+    start_fast_simulation(app, 5)
 
     return app
 
 
-def start_simulation(app):
-    print("start simulation - start data processing", flush=True)
-    handle_all_data(app)
+def start_fast_simulation(app, start_delay_seconds):
+    logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
+
+    scheduler = GeventScheduler(daemon=True, timezone="Etc/UTC")
+    run_date = datetime.datetime.now() + datetime.timedelta(seconds=start_delay_seconds)
+    scheduler.add_job(handle_all_data_fast, "date", args=[app], run_date=run_date)
+    scheduler.start()
+
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
 
 
 def start_sensor_scheduler(app, cycle_length):

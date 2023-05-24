@@ -10,6 +10,8 @@ RUN pip3 install --no-cache-dir \
         notebook \
         jupyterlab
 
+RUN pip install markupsafe==2.0.1
+
 # Create jupyter notebook workspace
 RUN mkdir $WORKSPACE
 WORKDIR $WORKSPACE

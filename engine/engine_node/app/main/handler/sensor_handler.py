@@ -30,7 +30,32 @@ shared_data = []
 shared_labels = []
 
 
-def handle_current_sensors(app, scheduler):
+def handle_all_data_fast(app):
+    """Read in the next set of sensor data and handle it.
+
+    :param app: The flask app context for accessing the db
+    :param scheduler: Scheduler object to stop it in the end
+    :return: None
+    """
+    global sensor_data, current_row, current_cycle, current_prediction, maintenance_start_cycle
+
+    # read the sensor data and cache it
+    print("import sensor data", flush=True)
+    sensor_data = import_data()
+
+    print(
+        f"processing sensor data ()".format(
+            "%f", (current_row / len(sensor_data) * 100)
+        ),
+        flush=True,
+    )
+
+    while current_row < len(sensor_data):
+        handle_current_sensors(app)
+    return None
+
+
+def handle_current_sensors(app, scheduler=None):
     """Read in the next set of sensor data and handle it.
 
     :param app: The flask app context for accessing the db
@@ -62,7 +87,8 @@ def handle_current_sensors(app, scheduler):
         lookahead = sensor_data.iloc[current_row]
     except IndexError:
         # shutdown scheduler as there is no data left
-        # scheduler.shutdown(wait=False)
+        if scheduler is not None:
+            scheduler.shutdown(wait=False)
         last_run = True
 
     current_sensor_values = sensor_data.iloc[current_row - 1]

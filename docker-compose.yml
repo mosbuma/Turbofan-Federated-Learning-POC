@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   notebooks:
     image: pysyft-notebook:latest
@@ -9,7 +9,7 @@ services:
     networks:
       - grid_default
     ports:
-      - '8888:8888'
+      - "8888:8888"
     volumes:
       - ./notebooks:/notebooks
       - ./localstorage-trainer:/localstorage-trainer
@@ -27,7 +27,7 @@ services:
     networks:
       - grid_default
     ports:
-      - '5000:5000'
+      - "5000:5000"
   engine1:
     image: turbofan-engine:latest
     container_name: engine1
@@ -48,12 +48,12 @@ services:
       - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
-      - 'gateway'
+      - "gateway"
     networks:
       - grid_default
     ports:
-      - '4001:4001'
-      - '8001:8001'
+      - "4001:4001"
+      - "8001:8001"
     volumes:
       - ./localstorage-engine1:/data
   engine2:
@@ -76,12 +76,12 @@ services:
       - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
-      - 'gateway'
+      - "gateway"
     networks:
       - grid_default
     ports:
-      - '4002:4002'
-      - '8002:8002'
+      - "4002:4002"
+      - "8002:8002"
     volumes:
       - ./localstorage-engine2:/data
   engine3:
@@ -104,12 +104,12 @@ services:
       - GUNICORN_TIMEOUT=600
       - GUNICORN_LOG-FILE=-
     depends_on:
-      - 'gateway'
+      - "gateway"
     networks:
       - grid_default
     ports:
-      - '4003:4003'
-      - '8003:8003'
+      - "4003:4003"
+      - "8003:8003"
     volumes:
       - ./localstorage-engine3:/data
   trainer:
@@ -123,10 +123,10 @@ services:
       - DATA_DIR=/data
       - MODEL_DIR=/models
     depends_on:
-      - 'gateway'
-      - 'engine1'
-      - 'engine2'
-      - 'engine3'
+      - "gateway"
+      - "engine1"
+      - "engine2"
+      - "engine3"
     networks:
       - grid_default
     volumes:
@@ -136,7 +136,7 @@ services:
     image: amdex_server:latest
     container_name: amdex_server
     ports:
-      - '8081:8081'
+      - "8081:8081"
     environment:
       - NODE_ENV=production
     restart: always
