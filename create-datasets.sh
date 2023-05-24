@@ -1,1 +1,1 @@
-python3 data_preprocessor.py --no_download --turbofan_dataset_id=FD001 --engine_percentage_initial=5 --engine_percentage_val=50 --worker_count=3
+python3 data_preprocessor.py --no_download --turbofan_dataset_id=FD001 --engine_percentage_initial=10 --engine_percentage_val=50 --worker_count=3
