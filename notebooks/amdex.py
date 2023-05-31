@@ -79,9 +79,9 @@ class AMdEX:
             print("Error deleting dataview:", str(e))
             return None
 
-    def get_policies(self, uuid = None):
+    def get_policies(self, uuid=None):
         try:
-            if(uuid!=None):
+            if uuid == None:
                 result = requests.get(
                     f"{self.base_url}/api/authenticated/policies",
                     headers={
@@ -151,6 +151,7 @@ class AMdEX:
 
     def create_job(self, body={}):
         try:
+            print(body)
             result = requests.post(
                 f"{self.base_url}/api/authenticated/jobs/{self._auth['account_uuid']}",
                 headers={
@@ -163,6 +164,27 @@ class AMdEX:
             return result.json()
         except requests.exceptions.RequestException as e:
             print("Error creating job:", str(e))
+            return None
+
+    def append_job(self, job_uuid, policy_uuids=[]):
+        try:
+            record = {
+                "type": "append",
+                "job_uuid": job_uuid,
+                "data": {"policy_uuids": policy_uuids},
+            }
+            result = requests.post(
+                f"{self.base_url}/api/authenticated/jobs/{self._auth['account_uuid']}",
+                headers={
+                    "Authorization": f"Bearer {self._auth['bearer_token']}",
+                    "origin": self.base_url,
+                },
+                json=json.dumps(record),
+            )
+            result.raise_for_status()
+            return result.json()
+        except requests.exceptions.RequestException as e:
+            print("Error appending job:", str(e))
             return None
 
     def delete_jobs(self):
