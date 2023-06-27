@@ -29,7 +29,6 @@ maintenance_start_cycle = 0
 shared_data = []
 shared_labels = []
 
-
 def handle_all_data_fast(app):
     """Read in the next set of sensor data and handle it.
 
@@ -51,7 +50,8 @@ def handle_all_data_fast(app):
     )
 
     while current_row < len(sensor_data):
-        handle_current_sensors(app)
+        # handle_current_sensors(app)
+         app.app_context()
     return None
 
 

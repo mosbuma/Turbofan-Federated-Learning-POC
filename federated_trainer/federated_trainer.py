@@ -28,8 +28,8 @@ hook = sy.TorchHook(torch)
 
 matplotlib.use("agg")
 
-DATA_TAGS = ("#X", "#turbofan", "#dataset")
-LABEL_TAGS = ("#Y", "#turbofan", "#dataset")
+DATA_TAGS = ("#X", "#dataset")
+LABEL_TAGS = ("#Y", "#dataset")
 MODEL_ID = "turbofan"
 
 grid_gateway_address = None
@@ -275,26 +275,36 @@ if __name__ == "__main__":
 
     # read in the arguments
     grid_gateway_address = args.grid_gateway_address
-    new_data_threshold = int(args.new_data_threshold)
-    scheduler_interval = int(args.scheduler_interval)
-    epochs = int(args.epochs)
-    data_dir = args.data_dir
-    model_dir = args.model_dir
+    # new_data_threshold = int(args.new_data_threshold)
+    # scheduler_interval = int(args.scheduler_interval)
+    # epochs = int(args.epochs)
+    # data_dir = args.data_dir
+    # model_dir = args.model_dir
 
-    logging.getLogger("apscheduler").setLevel(logging.ERROR)
+    # logging.getLogger("apscheduler").setLevel(logging.ERROR)
 
-    print("Deploying initial model to grid...")
+    # print("Deploying initial model to grid...")
 
-    initial_model = load_initial_model()
-    print("***** loaded initial model")
-    serve_model(initial_model)
+    # initial_model = load_initial_model()
+    # print("***** loaded initial model")
+    # serve_model(initial_model)
 
-    print("Started Federated Trainer... watching for new data.")
+    # print("Started Federated Trainer... watching for new data.")
 
-    scheduler = BlockingScheduler(daemon=True)
-    scheduler.add_job(handle_interval, "interval", args=[], seconds=scheduler_interval)
+    # scheduler = BlockingScheduler(daemon=True)
+    # scheduler.add_job(handle_interval, "interval", args=[], seconds=scheduler_interval)
 
-    # Shut down the scheduler when exiting
-    atexit.register(lambda: scheduler.shutdown())
+    # # Shut down the scheduler when exiting
+    # atexit.register(lambda: scheduler.shutdown())
 
-    scheduler.start()
+    # scheduler.start()
+
+    print(
+        "Creating public gateway on ",
+        "http://{}".format(grid_gateway_address),
+        flush=True,
+    )
+    grid = PublicGridNetwork(hook, "http://{}".format(grid_gateway_address))
+
+    results = grid.search("#X", "#dataset")
+    print(results, flush=True)

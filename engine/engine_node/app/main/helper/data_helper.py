@@ -5,6 +5,12 @@ import pandas as pd
 WINDOW_SIZE = 80
 RUL_CLIP_LIMIT = 110
 
+def RUL_calculator(df, df_max_cycles):
+    max_cycle = df_max_cycles["cycle"]
+    result_frame = df.merge(max_cycle.to_frame(name='max_cycle'), left_on='id', right_index=True)
+    result_frame["RUL"] = result_frame["max_cycle"] - result_frame["cycle"]
+    result_frame.drop(['max_cycle'], axis=1, inplace=True)
+    return result_frame
 
 def add_rul_to_train_data(train_data):
     """ Calculate and add the RUL to all rows in the given training data.
