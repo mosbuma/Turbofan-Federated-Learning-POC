@@ -40,9 +40,9 @@ services:
       - "4001:4001"
       - "8001:8001"
     volumes:
-      # - ./localstorage-engine1:/data
+      - ./localstorage-engine1:/data
       # - ./CMaps:/data
-      - ./Datasets:/data
+      # - ./Datasets:/data
   engine2:
     image: turbofan-engine:latest
     container_name: engine2
@@ -70,16 +70,16 @@ services:
       - "4002:4002"
       - "8002:8002"
     volumes:
-      # - ./localstorage-engine1:/data
+      - ./localstorage-engine2:/data
       # - ./CMaps:/data
-      - ./Datasets:/data
+      # - ./Datasets:/data
   trainer:
     image: turbofan-federated-trainer:latest
     container_name: trainer
     environment:
       - NEW_DATA_THRESHOLD=300
       - GRID_GATEWAY_ADDRESS=grid-gateway:5000
-      - SCHEDULER_INTERVAL=10
+      - SCHEDULER_INTERVAL=2
       - EPOCHS=30
       - DATA_DIR=/data
       - MODEL_DIR=/models

@@ -30,6 +30,9 @@ from .main.handler.sensor_handler import move_current_data_to_training
 
 hook = sy.TorchHook(th)
 
+shared_data = []
+shared_labels = []
+
 def create_app(
     engine_id,
     grid_node_address,
@@ -75,8 +78,8 @@ def create_app(
 
     print("Creating Grid Node...", flush=True)
     
-    path = "/data/train_FD001.txt"
-    path = f"/data/node_dataset_{engine_id}"
+    # path = "/data/train_FD001.txt"
+    path = f"/data/node_dataset_{engine_id}.txt"
 
     jet_data = pd.read_csv(path, sep=" ", header=None)
     jet_data.columns = ["id","cycle","op1","op2","op3","sensor1","sensor2","sensor3","sensor4","sensor5"
@@ -125,6 +128,8 @@ def create_app(
     X = th.tensor(X, dtype=th.float32)
     y = th.tensor(y, dtype=th.float32)
 
+    y = y.view(-1, 1)
+
     # tag the data so it can be searched within the grid
     X = X.tag("#X", "#dataset").describe(
         f"The input datapoints for the {engine_id} dataset"
@@ -139,16 +144,16 @@ def create_app(
 
     print("GRID NODE : ", grid_node, flush=True)
 
-    x_pointer = X.send(grid_node)
-    y_pointer = y.send(grid_node)
+    shared_data.append(X.send(grid_node))
+    shared_labels.append(y.send(grid_node))
 
-    # print("Data Pointers : ", x_pointer, y_pointer, flush=True)
+    print(engine_id, " has uploaded their data....", flush=True)
 
     # -----------------------------------------------------------------
 
-    grid = PublicGridNetwork(hook, "http://{}".format(grid_gateway_address))
-    results = grid.search("#X", "#dataset")
-    print(results, flush=True)
+    # grid = PublicGridNetwork(hook, "http://{}".format(grid_gateway_address))
+    # results = grid.search("#X", "#dataset")
+    # print(results, flush=True)
 
     # -----------------------------------------------------------------
 

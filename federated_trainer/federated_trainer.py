@@ -8,6 +8,7 @@ import os
 import argparse
 from collections import defaultdict
 import logging
+import time
 
 import numpy as np
 import termplotlib as tpl
@@ -15,6 +16,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 import torch
+import torch.nn as nn
+import torch.optim as optim
+
 import syft as sy
 from apscheduler.schedulers.blocking import BlockingScheduler
 from syft import PublicGridNetwork
@@ -23,6 +27,9 @@ from helper.data_helper import get_validation_data, get_test_data, WINDOW_SIZE
 from helper.trainings_helper import data_result_size, start_federated_training, history
 from helper.trainings_helper import get_model_error
 from helper.turbofan_model import TurbofanModel
+
+from helper.lstm import LSTMModel
+from helper.dt import DecisionTree
 
 hook = sy.TorchHook(torch)
 
@@ -42,6 +49,28 @@ training_rounds = 0
 inputs_used = defaultdict(list)
 labels_used = defaultdict(list)
 
+# --------------------
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+if (torch.cuda.is_available()):
+    torch.set_default_tensor_type(torch.cuda.FloatTensor)
+
+input_size = 12
+hidden_size = 128
+num_layers = 2
+output_size = 1
+
+# Initialize the model
+# model = LSTMModel(input_size, hidden_size, num_layers, output_size)
+
+model = DecisionTree(input_size)
+model.to(device)
+
+#Define the loss function and optimizer
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# --------------------
 
 parser = argparse.ArgumentParser(description="Run Federated Trainer.")
 
@@ -269,6 +298,48 @@ def start_training_round(inputs, labels):
 
     remember_data_used(inputs, labels)
 
+def checkForData():
+    """Check the grid for enough new data and then start a new training round."""
+    global training_rounds
+
+    inputs, labels = get_grid_data()
+    # inputs, labels = filter_new_data(inputs, labels)
+    data_count = data_result_size(list(inputs.values()))
+    print("Found {} new input samples in the grid".format(data_count))
+
+def epoch_total_size(data):
+    total = 0
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            total += data[i][j].shape[0]
+    return total
+
+def train(epoch):
+    model.train()
+    epoch_total = epoch_total_size(data)
+    current_epoch_size = 0
+
+    for i in range(len(data)): # loops twice
+        for j in range(len(data[i])):
+            current_epoch_size += len(data[i][j])
+
+            worker = data[i][j].location
+            model.send(worker)
+
+            optimizer.zero_grad()
+            print(data[i][j])
+            pred = model(data[i][j])
+
+            loss = criterion(pred, target[i][j])
+            loss.backward()
+            optimizer.step()
+
+            model.get()
+            loss = loss.get()
+            
+            print('Train Epoch: {} | With {} data |: [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, worker.id, current_epoch_size, epoch_total, 100. * current_epoch_size / epoch_total, loss.item()
+            ))
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -276,28 +347,22 @@ if __name__ == "__main__":
     # read in the arguments
     grid_gateway_address = args.grid_gateway_address
     # new_data_threshold = int(args.new_data_threshold)
-    # scheduler_interval = int(args.scheduler_interval)
+    scheduler_interval = int(args.scheduler_interval)
     # epochs = int(args.epochs)
     # data_dir = args.data_dir
-    # model_dir = args.model_dir
+    model_dir = args.model_dir
 
-    # logging.getLogger("apscheduler").setLevel(logging.ERROR)
-
-    # print("Deploying initial model to grid...")
-
-    # initial_model = load_initial_model()
-    # print("***** loaded initial model")
-    # serve_model(initial_model)
-
-    # print("Started Federated Trainer... watching for new data.")
+    # ----------------------------
 
     # scheduler = BlockingScheduler(daemon=True)
-    # scheduler.add_job(handle_interval, "interval", args=[], seconds=scheduler_interval)
+    # scheduler.add_job(checkForData, "interval", args=[], seconds=scheduler_interval)
 
     # # Shut down the scheduler when exiting
     # atexit.register(lambda: scheduler.shutdown())
 
     # scheduler.start()
+
+    # ----------------------------
 
     print(
         "Creating public gateway on ",
@@ -306,5 +371,13 @@ if __name__ == "__main__":
     )
     grid = PublicGridNetwork(hook, "http://{}".format(grid_gateway_address))
 
-    results = grid.search("#X", "#dataset")
-    print(results, flush=True)
+    data = grid.search("#X", "#dataset")
+    target = grid.search("#Y", "#dataset")
+
+    data = list(data.values())
+    target = list(target.values())
+
+    N_EPOCS = 4
+
+    for epoch in range (N_EPOCS):
+        train(epoch)
