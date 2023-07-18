@@ -60,9 +60,6 @@ class AMdEX:
         try:
             result = self._requestsSession.get(
                 f"{self.base_url}/api/authenticated/dataviews",
-                headers={
-                    "origin": self.base_url,
-                },
             )
             result.raise_for_status()
             return result.json()
@@ -74,9 +71,6 @@ class AMdEX:
         try:
             result = self._requestsSession.post(
                 f"{self.base_url}/api/authenticated/dataviews",
-                headers={
-                    "origin": self.base_url,
-                },
                 json=json.dumps(body),
             )
             result.raise_for_status()
@@ -89,9 +83,6 @@ class AMdEX:
         try:
             result = self._requestsSession.delete(
                 f"{self.base_url}/api/authenticated/dataviews/{dataview_uuid}",
-                headers={
-                    "origin": self.base_url,
-                },
             )
             result.raise_for_status()
             return result.json()
@@ -104,16 +95,10 @@ class AMdEX:
             if uuid == None:
                 result = self._requestsSession.get(
                     f"{self.base_url}/api/authenticated/policies",
-                    headers={
-                            "origin": self.base_url,
-                    },
                 )
             else:
                 result = self._requestsSession.get(
                     f"{self.base_url}/api/authenticated/policies/{uuid}",
-                    headers={
-                            "origin": self.base_url,
-                    },
                 )
             result.raise_for_status()
             return result.json()
@@ -125,9 +110,6 @@ class AMdEX:
         try:
             result = self._requestsSession.post(
                 f"{self.base_url}/api/authenticated/policies",
-                headers={
-                    "origin": self.base_url,
-                },
                 json=json.dumps(body),
             )
             result.raise_for_status()
@@ -140,9 +122,6 @@ class AMdEX:
         try:
             result = self._requestsSession.delete(
                 f"{self.base_url}/api/authenticated/policies/{policy_uuid}",
-                headers={
-                    "origin": self.base_url,
-                },
             )
             result.raise_for_status()
             return result.json()
@@ -153,10 +132,7 @@ class AMdEX:
     def get_jobs(self):
         try:
             result = self._requestsSession.get(
-                f"{self.base_url}/api/authenticated/jobs/{self._session['account_uuid']}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/jobs",
             )
             result.raise_for_status()
             return result.json()
@@ -168,10 +144,7 @@ class AMdEX:
         try:
             print(body)
             result = self._requestsSession.post(
-                f"{self.base_url}/api/authenticated/jobs/{self._session['account_uuid']}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/jobs",
                 json=json.dumps(body),
             )
             result.raise_for_status()
@@ -188,10 +161,7 @@ class AMdEX:
                 "data": {"policy_uuids": policy_uuids},
             }
             result = self._requestsSession.post(
-                f"{self.base_url}/api/authenticated/jobs/{self._session['account_uuid']}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/jobs",
                 json=json.dumps(record),
             )
             result.raise_for_status()
@@ -203,10 +173,7 @@ class AMdEX:
     def delete_jobs(self):
         try:
             result = self._requestsSession.delete(
-                f"{self.base_url}/api/authenticated/jobs/{self._session['account_uuid']}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/jobs",
             )
             result.raise_for_status()
             return result.json()
@@ -246,10 +213,7 @@ class AMdEX:
     def get_auditlogs(self, job_uuid):
         try:
             result = self._requestsSession.get(
-                f"{self.base_url}/api/authenticated/auditlogs/{self._session['account_uuid']}/{job_uuid}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/auditlogs/{job_uuid}",
             )
             result.raise_for_status()
             return result.json()
@@ -260,10 +224,7 @@ class AMdEX:
     def create_auditlog(self, job_uuid, body={}):
         try:
             result = self._requestsSession.post(
-                f"{self.base_url}/api/authenticated/auditlogs/{self._session['account_uuid']}/{job_uuid}",
-                headers={
-                    "origin": self.base_url,
-                },
+                f"{self.base_url}/api/authenticated/auditlogs/{job_uuid}",
                 json=json.dumps(body),
             )
             result.raise_for_status()
