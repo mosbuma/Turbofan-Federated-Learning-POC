@@ -2,11 +2,10 @@ import requests
 import json
 import time
 
-
 class AMdEX:
     def __init__(self, base_url="https://develop.amdex.dev"):
         self.base_url = base_url
-        self._requestsSession = self._requestsSession.Session()
+        self._requestsSession = requests.Session()
         self._session = None
 
     def get_version(self):
