@@ -2,6 +2,7 @@ import requests
 import json
 import time
 
+
 class AMdEX:
     def __init__(self, base_url="https://develop.amdex.dev"):
         self.base_url = base_url
@@ -17,11 +18,11 @@ class AMdEX:
             print("Error retrieving version:", str(e))
             return None
 
-    
     def signin(self, email, password_hash):
         try:
             # Fetch CSRF token
-            result1 = self._requestsSession.get(f"{self.base_url}/api/auth/csrf")
+            result1 = self._requestsSession.get(
+                f"{self.base_url}/api/auth/csrf")
             result1.raise_for_status()
             csrf_token = result1.json()["csrfToken"]
 
@@ -43,7 +44,8 @@ class AMdEX:
 
             # Fetch session if authentication was successful
             if result2.ok:
-                result3 = self._requestsSession.get(f"{self.base_url}/api/auth/session")
+                result3 = self._requestsSession.get(
+                    f"{self.base_url}/api/auth/session")
                 result3.raise_for_status()
                 session = result3.json()
                 self._session = session["user"] if "user" in session else None
@@ -192,7 +194,8 @@ class AMdEX:
 
         while True:
             existing_jobs = self.get_jobs()
-            job = next((j for j in existing_jobs if j["job_uuid"] == job_uuid), None)
+            job = next(
+                (j for j in existing_jobs if j["job_uuid"] == job_uuid), None)
 
             if job:
                 if job["status"] == "OK":
@@ -209,10 +212,10 @@ class AMdEX:
 
         return None
 
-    def get_auditlogs(self, job_uuid):
+    def get_notary_lines(self, job_uuid):
         try:
             result = self._requestsSession.get(
-                f"{self.base_url}/api/authenticated/auditlogs/{job_uuid}",
+                f"{self.base_url}/api/authenticated/notary/{job_uuid}",
             )
             result.raise_for_status()
             return result.json()
@@ -220,14 +223,14 @@ class AMdEX:
             print("Error retrieving audit logs:", str(e))
             return None
 
-    def create_auditlog(self, job_uuid, body={}):
+    def create_notary_line(self, job_uuid, body={}):
         try:
             result = self._requestsSession.post(
-                f"{self.base_url}/api/authenticated/auditlogs/{job_uuid}",
+                f"{self.base_url}/api/authenticated/notary/{job_uuid}",
                 json=json.dumps(body),
             )
             result.raise_for_status()
             return result.json()
         except self._requestsSession.exceptions.RequestException as e:
-            print("Error creating audit log:", str(e))
+            print("Error creating notary line:", str(e))
             return None
