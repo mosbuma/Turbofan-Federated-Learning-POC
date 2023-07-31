@@ -154,22 +154,23 @@ class AMdEX:
             print("Error creating job:", str(e))
             return None
 
-    def append_job(self, job_uuid, policy_uuids=[]):
-        try:
-            record = {
-                "type": "append",
-                "job_uuid": job_uuid,
-                "data": {"policy_uuids": policy_uuids},
-            }
-            result = self._requestsSession.post(
-                f"{self.base_url}/api/authenticated/jobs",
-                json=json.dumps(record),
-            )
-            result.raise_for_status()
-            return result.json()
-        except self._requestsSession.exceptions.RequestException as e:
-            print("Error appending job:", str(e))
-            return None
+    # TODO: use create_job instead with parent_job_uuid in meta-field (TO BE IMPLEMENTED)
+    # def append_job(self, job_uuid, policy_uuids=[]):
+    #     try:
+    #         record = {
+    #             "type": "append",
+    #             "job_uuid": job_uuid,
+    #             "data": {"policy_uuids": policy_uuids},
+    #         }
+    #         result = self._requestsSession.post(
+    #             f"{self.base_url}/api/authenticated/jobs",
+    #             json=json.dumps(record),
+    #         )
+    #         result.raise_for_status()
+    #         return result.json()
+    #     except self._requestsSession.exceptions.RequestException as e:
+    #         print("Error appending job:", str(e))
+    #         return None
 
     def delete_jobs(self):
         try:
