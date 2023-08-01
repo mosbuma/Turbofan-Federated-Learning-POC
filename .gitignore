@@ -6,6 +6,7 @@
 .keras
 .jupyter
 .ipython
+.vscode
 
 # ignore python cache
 __pycache__/

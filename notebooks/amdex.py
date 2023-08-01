@@ -4,7 +4,7 @@ import time
 
 
 class AMdEX:
-    def __init__(self, base_url="https://develop.amdex.dev"):
+    def __init__(self, base_url="https://develop.trust.amdex.dev"):
         self.base_url = base_url
         self._requestsSession = requests.Session()
         self._session = None
@@ -21,8 +21,7 @@ class AMdEX:
     def signin(self, email, password_hash):
         try:
             # Fetch CSRF token
-            result1 = self._requestsSession.get(
-                f"{self.base_url}/api/auth/csrf")
+            result1 = self._requestsSession.get(f"{self.base_url}/api/auth/csrf")
             result1.raise_for_status()
             csrf_token = result1.json()["csrfToken"]
 
@@ -31,7 +30,7 @@ class AMdEX:
                 "csrfToken": csrf_token,
                 "email": email,
                 "password_hash": password_hash,
-                "json": "true"
+                "json": "true",
             }
 
             # Make authentication request
@@ -44,8 +43,7 @@ class AMdEX:
 
             # Fetch session if authentication was successful
             if result2.ok:
-                result3 = self._requestsSession.get(
-                    f"{self.base_url}/api/auth/session")
+                result3 = self._requestsSession.get(f"{self.base_url}/api/auth/session")
                 result3.raise_for_status()
                 session = result3.json()
                 self._session = session["user"] if "user" in session else None
@@ -154,24 +152,6 @@ class AMdEX:
             print("Error creating job:", str(e))
             return None
 
-    # TODO: use create_job instead with parent_job_uuid in meta-field (TO BE IMPLEMENTED)
-    # def append_job(self, job_uuid, policy_uuids=[]):
-    #     try:
-    #         record = {
-    #             "type": "append",
-    #             "job_uuid": job_uuid,
-    #             "data": {"policy_uuids": policy_uuids},
-    #         }
-    #         result = self._requestsSession.post(
-    #             f"{self.base_url}/api/authenticated/jobs",
-    #             json=json.dumps(record),
-    #         )
-    #         result.raise_for_status()
-    #         return result.json()
-    #     except self._requestsSession.exceptions.RequestException as e:
-    #         print("Error appending job:", str(e))
-    #         return None
-
     def delete_jobs(self):
         try:
             result = self._requestsSession.delete(
@@ -195,8 +175,7 @@ class AMdEX:
 
         while True:
             existing_jobs = self.get_jobs()
-            job = next(
-                (j for j in existing_jobs if j["job_uuid"] == job_uuid), None)
+            job = next((j for j in existing_jobs if j["job_uuid"] == job_uuid), None)
 
             if job:
                 if job["status"] == "OK":
